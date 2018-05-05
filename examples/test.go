@@ -20,7 +20,7 @@ type APIConf struct {
 }
 
 func main() {
-	settings := NewSettings()
+	settings := settings.NewSettings()
 	fmt.Println(settings.LoadJSONFile("./test.json"))
 	fmt.Println(settings.LoadJSONFile("./test2.json"))
 	settings.Print()

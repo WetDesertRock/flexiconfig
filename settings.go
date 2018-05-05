@@ -6,7 +6,7 @@ import (
 	"strings"
 	"encoding/json"
 	// "github.com/yuin/gopher-lua"
-	"github.com/wetdesertrock/unmarshal"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Settings struct {
@@ -102,7 +102,7 @@ func (this Settings) Get(path string, target interface{}) (error) {
 		return err
 	}
 
-	err = unmarshal.Unmarshal(rawvalue, target)
+	err = mapstructure.Decode(rawvalue, target)
 	return err
 }
 
