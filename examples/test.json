@@ -1,0 +1,20 @@
+{
+	"three": "3",
+	"four": 4.2,
+	"five": {
+		"six": 6
+	},
+	"unmarshal": {
+		"test":{
+			"Value": 242,
+			"Others": [
+				{
+					"Name": "bro"
+				},
+				{
+					"Name": "bab"
+				}
+			]
+		}
+	}
+}
