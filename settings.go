@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"strings"
 	"encoding/json"
-	// "github.com/yuin/gopher-lua"
+	"github.com/yuin/gopher-lua"
+	"github.com/yuin/gluamapper"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -22,6 +23,46 @@ func NewSettings() Settings {
 
 func (this Settings) Print() {
 	fmt.Println(this.settings)
+}
+
+func (this *Settings) LoadLuaString(code string) error {
+	L := lua.NewState()
+	defer L.Close()
+	if err := L.DoString(code); err != nil {
+		return err
+	}
+
+	return this.LoadLuaState(L.Get(-1))
+}
+
+func (this *Settings) LoadLuaFile(path string) error {
+	L := lua.NewState(lua.Options{
+		IncludeGoStackTrace: true,
+	})
+	defer L.Close()
+	if err := L.DoFile(path); err != nil {
+		return err
+	}
+
+	return this.LoadLuaState(L.Get(-1))
+}
+
+func (this *Settings) LoadLuaState(lv lua.LValue) error {
+	opt := gluamapper.Option{}
+	opt.NameFunc = func(s string) string { return s }
+	opt.TagName = "gluamapper"
+
+	_newSettings := gluamapper.ToGoValue(lv, opt).(map[interface{}]interface{})
+	newSettings := make(map[string]interface{})
+
+	for key, value := range _newSettings {
+		switch key := key.(type) {
+			case string:
+				newSettings[key] = value
+		}
+	}
+
+	return this.MergeSettings(newSettings)
 }
 
 // LoadJSON takes a byte slice, dejsonifys it, then stores the contents in the
