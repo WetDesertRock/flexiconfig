@@ -6,7 +6,8 @@ import (
 	"strings"
 	"encoding/json"
 	"github.com/yuin/gopher-lua"
-	"github.com/yuin/gluamapper"
+	// "github.com/yuin/gluamapper"
+	luajson "layeh.com/gopher-json"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -22,11 +23,16 @@ func NewSettings() Settings {
 }
 
 func (this Settings) Print() {
-	fmt.Println(this.settings)
+	b, err := json.MarshalIndent(this.settings, "", "  ")
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(string(b))
 }
 
 func (this *Settings) LoadLuaString(code string) error {
 	L := lua.NewState()
+	// luajson.Preload(L)
 	defer L.Close()
 	if err := L.DoString(code); err != nil {
 		return err
@@ -36,9 +42,8 @@ func (this *Settings) LoadLuaString(code string) error {
 }
 
 func (this *Settings) LoadLuaFile(path string) error {
-	L := lua.NewState(lua.Options{
-		IncludeGoStackTrace: true,
-	})
+	L := lua.NewState()
+	// luajson.Preload(L)
 	defer L.Close()
 	if err := L.DoFile(path); err != nil {
 		return err
@@ -48,21 +53,18 @@ func (this *Settings) LoadLuaFile(path string) error {
 }
 
 func (this *Settings) LoadLuaState(lv lua.LValue) error {
-	opt := gluamapper.Option{}
-	opt.NameFunc = func(s string) string { return s }
-	opt.TagName = "gluamapper"
+	// opt := gluamapper.Option{}
+	// opt.NameFunc = func(s string) string { return s }
+	// opt.TagName = "gluamapper"
 
-	_newSettings := gluamapper.ToGoValue(lv, opt).(map[interface{}]interface{})
-	newSettings := make(map[string]interface{})
+	// newSettings := gluamapper.ToGoValue(lv, opt).(map[interface{}]interface{})
 
-	for key, value := range _newSettings {
-		switch key := key.(type) {
-			case string:
-				newSettings[key] = value
-		}
+	jsonSettings, err := luajson.Encode(lv)
+	if err != nil {
+		return err
 	}
 
-	return this.MergeSettings(newSettings)
+	return this.LoadJSON(jsonSettings)
 }
 
 // LoadJSON takes a byte slice, dejsonifys it, then stores the contents in the
