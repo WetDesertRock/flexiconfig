@@ -23,11 +23,24 @@ func NewSettings() Settings {
 }
 
 func (this Settings) Print() {
-	b, err := json.MarshalIndent(this.settings, "", "  ")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
+	b := this.GetPrettyJSON("", "  ")
 	fmt.Println(string(b))
+}
+
+func (this Settings) GetPrettyJSON(prefix, indent string) []byte {
+	b, err := json.MarshalIndent(this.settings, prefix, indent)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func (this Settings) GetJSON() []byte {
+	b, err := json.Marshal(this.settings)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func (this *Settings) LoadLuaString(code string) error {
