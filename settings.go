@@ -1,23 +1,29 @@
 package settings
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
-	"encoding/json"
-	"github.com/yuin/gopher-lua"
+
+	lua "github.com/yuin/gopher-lua"
+
 	// "github.com/yuin/gluamapper"
-	luajson "layeh.com/gopher-json"
 	"github.com/mitchellh/mapstructure"
+	luajson "layeh.com/gopher-json"
 )
 
+type LuaLoader func(L *lua.LState) int
+
 type Settings struct {
-	settings map[string]interface{}
+	settings   map[string]interface{}
+	luaModules map[string]lua.LGFunction
 }
 
 func NewSettings() Settings {
 	settings := Settings{}
 	settings.settings = make(map[string]interface{})
+	settings.luaModules = make(map[string]lua.LGFunction)
 
 	return settings
 }
@@ -43,10 +49,18 @@ func (this Settings) GetJSON() []byte {
 	return b
 }
 
+func (this *Settings) AddLuaLoader(name string, loader lua.LGFunction) {
+	this.luaModules[name] = loader
+}
+
 func (this *Settings) LoadLuaString(code string) error {
 	L := lua.NewState()
-	// luajson.Preload(L)
+	luajson.Preload(L)
 	defer L.Close()
+
+	for moduleName, loader := range this.luaModules {
+		L.PreloadModule(moduleName, loader)
+	}
 	if err := L.DoString(code); err != nil {
 		return err
 	}
@@ -56,8 +70,13 @@ func (this *Settings) LoadLuaString(code string) error {
 
 func (this *Settings) LoadLuaFile(path string) error {
 	L := lua.NewState()
-	// luajson.Preload(L)
+	luajson.Preload(L)
 	defer L.Close()
+
+	for moduleName, loader := range this.luaModules {
+		L.PreloadModule(moduleName, loader)
+	}
+
 	if err := L.DoFile(path); err != nil {
 		return err
 	}
@@ -83,7 +102,7 @@ func (this *Settings) LoadLuaState(lv lua.LValue) error {
 // LoadJSON takes a byte slice, dejsonifys it, then stores the contents in the
 //  Settings object.
 func (this *Settings) LoadJSON(b []byte) error {
-	var newSettings map[string]interface{};
+	var newSettings map[string]interface{}
 	err := json.Unmarshal(b, &newSettings)
 
 	if err != nil {
@@ -114,7 +133,7 @@ func mergeMaps(existing, new *map[string]interface{}) error {
 	existingmap := *existing
 	newmap := *new
 
-	for key,value := range newmap {
+	for key, value := range newmap {
 		if newvalue, ok := value.(map[string]interface{}); ok {
 			if existingvalue, ok := existingmap[key].(map[string]interface{}); ok {
 				mergeMaps(&existingvalue, &newvalue)
@@ -139,7 +158,7 @@ func (this Settings) RawGet(path string) (interface{}, error) {
 	node := this.settings
 
 	for _, part := range parts {
-		var ok bool;
+		var ok bool
 		if node, ok = node[part].(map[string]interface{}); !ok {
 			return nil, fmt.Errorf("Could not find %s (missing %s)", path, part)
 		}
@@ -152,7 +171,7 @@ func (this Settings) RawGet(path string) (interface{}, error) {
 	}
 }
 
-func (this Settings) Get(path string, target interface{}) (error) {
+func (this Settings) Get(path string, target interface{}) error {
 	rawvalue, err := this.RawGet(path)
 	if err != nil {
 		return err
