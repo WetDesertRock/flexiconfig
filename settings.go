@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	lua "github.com/yuin/gopher-lua"
@@ -121,6 +122,18 @@ func (this *Settings) LoadJSONFile(path string) error {
 	}
 
 	return this.LoadJSON(javascriptobjectnotation)
+}
+
+// LoadFile takes a path and attempts to load it with the proper loader based on extension.
+func (this *Settings) LoadFile(path string) error {
+	switch ext := filepath.Ext(path); ext {
+	case ".json":
+		return this.LoadJSONFile(path)
+	case ".lua":
+		return this.LoadLuaFile(path)
+	default:
+		return fmt.Errorf("Unable to determine config file type for path %s", path)
+	}
 }
 
 // MergeSettings takes a new map[string]interface{} of settings and merges it into
