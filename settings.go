@@ -229,6 +229,19 @@ func (this Settings) Get(path string, target interface{}) error {
 	return err
 }
 
+func (this Settings) GetBool(path string, def bool) (bool, error) {
+	rawvalue, err := this.RawGet(path)
+	if err != nil {
+		return def, err
+	}
+
+	if value, ok := rawvalue.(bool); !ok {
+		return def, fmt.Errorf("%s is not a bool", path)
+	} else {
+		return value, nil
+	}
+}
+
 func (this Settings) GetString(path string, def string) (string, error) {
 	rawvalue, err := this.RawGet(path)
 	if err != nil {
