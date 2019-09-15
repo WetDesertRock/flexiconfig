@@ -184,6 +184,41 @@ func (this Settings) RawGet(path string) (interface{}, error) {
 	}
 }
 
+func (this Settings) RawSet(timid bool, path string, value interface{}) error {
+	parts := strings.Split(path, ":")
+	finalpart := parts[len(parts)-1]
+	parts = parts[:len(parts)-1]
+
+	node := this.settings
+
+	for _, part := range parts {
+
+		// Check if this part exists
+		if nodePart, ok := node[part]; ok {
+			// Make sure this part isn't anything but another map
+			if node, ok = nodePart.(map[string]interface{}); !ok {
+				// If timid is true don't overwrite the invalid key
+				if timid {
+					return fmt.Errorf("Could not find %s (missing %s)", path, part)
+				} else {
+					// Create empty map for this part
+					newMap := make(map[string]interface{})
+					node[part] = newMap
+					node = newMap
+				}
+			}
+		} else {
+			// Create empty map for this part
+			newMap := make(map[string]interface{})
+			node[part] = newMap
+			node = newMap
+		}
+	}
+
+	node[finalpart] = value
+	return nil
+}
+
 func (this Settings) Get(path string, target interface{}) error {
 	rawvalue, err := this.RawGet(path)
 	if err != nil {
