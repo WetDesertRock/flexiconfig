@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/wetdesertrock/settings"
+
+	"github.com/wetdesertrock/flexiconfig"
 )
 
 type B struct {
@@ -10,7 +11,7 @@ type B struct {
 }
 
 type A struct {
-	Value int
+	Value  int
 	Others []B
 }
 
@@ -20,17 +21,17 @@ type APIConf struct {
 }
 
 func main() {
-	settings := settings.NewSettings()
+	settings := flexiconfig.NewSettings()
 	fmt.Println(settings.LoadJSONFile("./test.json"))
 	fmt.Println(settings.LoadLuaFile("./test2.lua"))
-// 	fmt.Println(settings.LoadLuaString(`return {
-// 		three = "333",
-// 		seven = "7",
-// 		five = {
-// 			eight = "8"
-// 		}
-// 	}
-// `))
+	// 	fmt.Println(settings.LoadLuaString(`return {
+	// 		three = "333",
+	// 		seven = "7",
+	// 		five = {
+	// 			eight = "8"
+	// 		}
+	// 	}
+	// `))
 	settings.Print()
 	fmt.Println(settings.GetString("three", "nonono"))
 	fmt.Println(settings.GetFloat("four", -1))
