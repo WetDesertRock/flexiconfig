@@ -1,4 +1,4 @@
-module github.com/wetdesertrock/settings
+module github.com/wetdesertrock/flexiconfig
 
 go 1.12
 

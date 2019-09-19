@@ -1,3 +1,3 @@
-package settings
+package flexiconfig
 
 // todo: this file.
