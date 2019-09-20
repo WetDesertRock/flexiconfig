@@ -1,12 +1,14 @@
 // Package flexiconfig is a configuration package with the goal of being
-//  powerful but not be more complex than a configuration package should
-//  be.
+// powerful but not be more complex than a configuration package should
+// be.
+//
 // FlexiConfig is a hierarchical system that will merge configs
-//  together based on the order that they are loaded. Later config loads
-//  will replace earlier settings if they overlap.
+// together based on the order that they are loaded. Later config loads
+// will replace earlier settings if they overlap.
+//
 // A core part of this package is the ability to load lua files. This
-//  gives you the ability to run a sub program in order to generate your
-//  config.
+// gives you the ability to run a sub program in order to generate your
+// config.
 package flexiconfig
 
 import (
@@ -23,11 +25,11 @@ import (
 )
 
 // LuaLoader is the type representing the function signature used to
-//  load custom lua modules.
+// load custom lua modules.
 type LuaLoader func(L *lua.LState) int
 
 // Settings is the main type that holds the config and loads new
-//  configuration files.
+// configuration files.
 type Settings struct {
 	settings   map[string]interface{}
 	luaModules map[string]lua.LGFunction
@@ -58,7 +60,7 @@ func (this Settings) GetPrettyJSON(prefix, indent string) []byte {
 }
 
 // GetJSON returns the json representation of the current config. This is useful
-//  to retain a static copy of the settings for later.
+// to retain a static copy of the settings for later.
 func (this Settings) GetJSON() []byte {
 	b, err := json.Marshal(this.settings)
 	if err != nil {
@@ -68,8 +70,8 @@ func (this Settings) GetJSON() []byte {
 }
 
 // AddLuaLoader can be used to add a custom lua module to each lua-state that is
-//  used. Note that flexiconfig currently creates a new lua instance for every
-//  lua config file loaded.
+// used. Note that flexiconfig currently creates a new lua instance for every
+// lua config file loaded.
 func (this *Settings) AddLuaLoader(name string, loader lua.LGFunction) {
 	this.luaModules[name] = loader
 }
@@ -118,7 +120,7 @@ func (this *Settings) loadLuaState(lv lua.LValue) error {
 }
 
 // LoadJSON takes a byte slice, dejsonifys it, then stores the contents in the
-//  Settings object.
+// Settings object.
 func (this *Settings) LoadJSON(b []byte) error {
 	var newSettings map[string]interface{}
 	err := json.Unmarshal(b, &newSettings)
@@ -154,13 +156,13 @@ func (this *Settings) LoadFile(path string) error {
 }
 
 // MergeSettings takes a new map[string]interface{} of settings and merges it into
-//  the existing one recursively.
+// the existing one recursively.
 func (this *Settings) MergeSettings(newSettings map[string]interface{}) error {
 	return mergeMaps(&this.settings, &newSettings)
 }
 
 // mergeMaps takes two maps and combines them, preferring the keys in the newer
-//  map.
+// map.
 func mergeMaps(existing, new *map[string]interface{}) error {
 	existingmap := *existing
 	newmap := *new
@@ -183,7 +185,7 @@ func mergeMaps(existing, new *map[string]interface{}) error {
 }
 
 // RawGet will return the interface{} of the value at a specific path, and
-//  error if the value cannot be found.
+// error if the value cannot be found.
 func (this Settings) RawGet(path string) (interface{}, error) {
 	parts := strings.Split(path, ":")
 	finalpart := parts[len(parts)-1]
@@ -206,14 +208,14 @@ func (this Settings) RawGet(path string) (interface{}, error) {
 }
 
 // RawSet will set the value of the config at a specific path. "timid" is used
-//  to help describe how to treat values that are part of the path but not the
-//  proper type. For instance, given this config:given the path of
-//    {"root": {"intermediate": 22}},
-//  and this function call:
-//    settings.RawSet(timid, "root:intermediate:value", "Hello World")
-//  timid == 0 will replace "itermediate" with the required map
-//  timid == 1 will instead throw an error claiming  to not be able to find the
-//  path.
+// to help describe how to treat values that are part of the path but not the
+// proper type. For instance, given this config:given the path of
+//   {"root": {"intermediate": 22}},
+// and this function call:
+//   settings.RawSet(timid, "root:intermediate:value", "Hello World")
+// timid == 0 will replace "itermediate" with the required map
+// timid == 1 will instead throw an error claiming  to not be able to find the
+// path.
 func (this Settings) RawSet(timid bool, path string, value interface{}) error {
 	parts := strings.Split(path, ":")
 	finalpart := parts[len(parts)-1]
